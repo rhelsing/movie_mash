@@ -1,6 +1,10 @@
 require "date"
+@interval = 4.0
+@offset = 0.0
 @folder = "/Users/ryanhelsing/Movies/Mexico"
 @files = Dir["#{@folder}/*"]
+
+#get length of song
 
 # puts @files
 
@@ -13,5 +17,5 @@ require "date"
   @hash[f] = {length: length.gsub("\n", "").strip, date: DateTime.parse("#{created.gsub(" ", "T")}+0:00")}
 end
 
-#parse
+#go through hash and determine optimal length of each video based on interval
 puts @hash

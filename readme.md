@@ -27,7 +27,7 @@ ffmpeg -i input.mp4 -ss 00:02:00 -t 00:07:28 part1.mp4
 ffmpeg -i input.mp4 -ss 00:10:50 -t 00:51:30 part2.mp4
 ffmpeg -i input.mp4 -ss 01:19:00 -t 00:08:05 part3.mp4
 
-    - stitch two videos
+    - stitch multiple videos
 
 inputs.txt
 file 'part1.mp4'
@@ -42,5 +42,5 @@ ffmpeg -f concat -i inputs.txt -c copy output.mp4
 * later:
   - recognize tempo and align
   - slow down to 93% of speed if 60fps
-  - color grade s curve
+  - color grade s curve - use photoshop scheme
 
