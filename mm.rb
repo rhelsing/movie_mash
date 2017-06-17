@@ -13,4 +13,5 @@ require "date"
   @hash[f] = {length: length.gsub("\n", "").strip, date: DateTime.parse("#{created.gsub(" ", "T")}+0:00")}
 end
 
+#parse
 puts @hash
