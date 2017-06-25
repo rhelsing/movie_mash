@@ -37,4 +37,12 @@ end
 
 @hash.each{|r| p r }
 
-#add up all split lengths
+#1. sort by date
+
+#2. output all clips to new folder sliced
+# ffmpeg -i #{in_clip} -ss 0.00 -t #{slice_interval} #{incrementing string} #aa, ab, ac
+@hash.each do |k, v|
+  puts %x(ffmpeg -i #{k} -ss 0.00 -t #{v[:split_length]} /Users/ryanhelsing/Movies/mm/temp_#{rand(20000)}.mp4)
+end
+
+#3. merge all clips to new file from folder
