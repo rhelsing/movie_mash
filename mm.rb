@@ -4,7 +4,7 @@ require "pry"
 @bpm = 96.0 #same as interval
 @offset = 0.732
 @frame_shift = 0.93#not yet
-@length = 3.51 #in minutes.seconds
+@length = "3:51" #in minutes.seconds
 @folder = "/Users/ryanhelsing/Movies/Mexico"
 @song = "/Users/ryanhelsing/Music/cool_blue.mp3"
 @files = Dir["#{@folder}/*"]
@@ -24,10 +24,22 @@ puts "analyzing"
 @files.each do |f|
   length = %x(ffprobe -i #{f} -show_entries format=duration -v quiet -of csv="p=0")
   created = %x(ffprobe -v quiet #{f} -print_format json -show_entries format_tags=creation_time -of csv="p=0")
-  @hash[f] = {length: length.gsub("\n", "").strip.to_f, date: DateTime.parse("#{created.gsub(" ", "T")}+0:00")}
+  rotation = %x(ffprobe #{f} 2>&1 | grep rotate)
+  if rotation.strip != ""
+    #there is rotation
+    rotate = rotation.split(":")[1].strip
+  else
+    rotate = false
+  end
+  @hash[f] = {length: length.gsub("\n", "").strip.to_f, date: DateTime.parse("#{created.gsub(" ", "T")}+0:00"), rotate: rotate}
   print "."
 end
 puts ""
+
+#1. sort by date
+@hash = @hash.sort_by { |k, v| v[:date] }
+
+binding.pry
 
 #go through hash and determine optimal length of each video based on interval - round down to nearest 1/(2^n) of @interval
 first = true
@@ -54,10 +66,6 @@ end
 puts ""
 
 @hash.each{|v| p "Found: #{v[0]}: #{v[1][:split_length]}" }
-
-
-#1. sort by date
-@hash.sort_by { |k, v| v[:date] }
 
 #2. output all clips to new folder sliced
 # ffmpeg -i #{in_clip} -ss 0.00 -t #{slice_interval} #{incrementing string} #aa, ab, ac
@@ -92,6 +100,15 @@ end
 %x(ffmpeg -f concat -i #{@output}/input.txt -c copy #{@output}/output.mp4)
 
 #compare length of song vs vid to output which is longer and by how much
+vid_length = @hash.map{|x| x[1][:split_length] }.reduce(:+)
+song_length = @length.split(":")[0].to_i*60+@length.split(":")[1].to_i
+
+if vid_length > song_length
+  puts "WARNING: ------> video is longer than song by #{vid_length-song_length} seconds"
+else
+  puts "WARNING: ------> song is longer than video by #{song_length-vid_length} seconds"
+end
+
 puts "adding audio"
 %x(ffmpeg -i #{@output}/output.mp4 -i #{@song} -c:v copy -map 0:v:0 -map 1:a:0 -shortest #{@output}/output_final.mp4)
 
