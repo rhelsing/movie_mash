@@ -39,8 +39,6 @@ puts ""
 #1. sort by date
 @hash = @hash.sort_by { |k, v| v[:date] }
 
-binding.pry
-
 #go through hash and determine optimal length of each video based on interval - round down to nearest 1/(2^n) of @interval
 first = true
 
@@ -72,7 +70,11 @@ puts ""
 puts "slicing"
 i = 0
 @hash.each do |k, v|
-  %x(ffmpeg -i #{k} -c copy -ss 0.00 -t #{v[:split_length]} #{@output}/temp_#{i}.mp4)
+  if v[:rotate]
+    %x(ffmpeg -i #{k} -ss 0.00 -t #{v[:split_length]} -r 60 -qscale 0 -acodec copy #{@output}/temp_#{i}.mp4) #need a faster way :( - autorotate w/ metadata loses on concat
+  else
+    %x(ffmpeg -i #{k} -c copy -ss 0.00 -t #{v[:split_length]} #{@output}/temp_#{i}.mp4)
+  end
   print "."
   i += 1
 end
@@ -90,14 +92,14 @@ puts "indexing"
 end
 puts ""
 
-@hash_output.sort_by { |k, v| v[:index] }
+@hash_output = @hash_output.sort_by { |k, v| v[:index] }
 
 puts "merging"
 File.open("#{@output}/input.txt", "w+") do |f|
-  @hash_output.each { |k, v| f.puts("file '#{k}'") }
+  @hash_output.each { |k, v| f.puts("file '#{k.gsub("#{@output}/", "")}'") }
 end
 
-%x(ffmpeg -f concat -i #{@output}/input.txt -c copy #{@output}/output.mp4)
+%x(ffmpeg -f concat -i #{@output}/input.txt -c copy -safe 0 #{@output}/output.mp4)
 
 #compare length of song vs vid to output which is longer and by how much
 vid_length = @hash.map{|x| x[1][:split_length] }.reduce(:+)
