@@ -1,14 +1,17 @@
 require "date"
 require "pry"
-@interval = 10.0 #no clip will be longer than this.. double if needed
-@bpm = 96.0 #same as interval
-@offset = 1.250
-@frame_shift = 0.93#not yet
-@length = "3:51" #in minutes.seconds
+@interval = 7.111 #no clip will be longer than this.. double if needed
+# @bpm = 100.0 #same as interval
+@offset = 3.611
+# @frame_shift = 0.93#not yet
+@length = "5:29" #in minutes.seconds
 @folder = "/Users/ryanhelsing/Movies/Mexico"
-@song = "/Users/ryanhelsing/Music/cool_blue.mp3"
+@song = "/Users/ryanhelsing/Music/tycho.mp3"
 @files = Dir["#{@folder}/*"]
 @output = "/Users/ryanhelsing/Movies/mm"
+@render_final = true
+
+#NEED TO EDIT VIDS BEFORE EXPORTING FROM PHONE>> CROP OUT SUCKY PARTS
 
 #get length of song
 
@@ -26,14 +29,14 @@ puts "analyzing"
 @files.each do |f|
   length = %x(ffprobe -i #{f} -show_entries format=duration -v quiet -of csv="p=0")
   created = %x(ffprobe -v quiet #{f} -print_format json -show_entries format_tags=creation_time -of csv="p=0")
-  rotation = %x(ffprobe #{f} 2>&1 | grep rotate)
-  if rotation.strip != ""
-    #there is rotation
-    rotate = rotation.split(":")[1].strip
-  else
-    rotate = false
-  end
-  @hash[f] = {length: length.gsub("\n", "").strip.to_f, date: DateTime.parse("#{created.gsub(" ", "T")}+0:00"), rotate: rotate}
+  # rotation = %x(ffprobe #{f} 2>&1 | grep rotate)
+  # if rotation.strip != ""
+  #   #there is rotation
+  #   rotate = rotation.split(":")[1].strip
+  # else
+  #   rotate = false
+  # end
+  @hash[f] = {length: length.gsub("\n", "").strip.to_f, date: DateTime.parse("#{created.gsub(" ", "T")}+0:00")}
   print "."
 end
 puts ""
@@ -72,13 +75,12 @@ puts ""
 puts "slicing"
 i = 0
 @hash.each do |k, v|
-  if v[:rotate]
-    # Note: All inputs must have the same stream types (same formats, same time base, etc.).
-    # ffmpeg -i <input_filename> -vf "transpose=<dir>" -metadata:s:v "rotate=0" -r 60 -vcodec libx264 -crf 18 -acodec copy <output_filename>
-    # Stream #0:0(und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709), 1920x1080, 23735 kb/s, 60 fps, 60 tbr, 600 tbn, 1200 tbc (default)
-    # %x(ffmpeg -i #{k} -ss 0.00 -t #{v[:split_length]} -r 60 -vcodec libx264 -crf 18 -acodec copy #{@output}/temp_#{i}.mp4) #need a faster way :( - autorotate w/ metadata loses on concat
-    %x(ffmpeg -i #{k} -c copy -ss 0.00 -t #{v[:split_length]} #{@output}/temp_#{i}.mp4)
+  if @render_final
+    # ffmpeg -i b.mp4 -ss 0.00 -t 2.5 -r 60 -vcodec libx264 -crf 20 -acodec copy test2.mp4
+    #render all using same settings to concat
+    %x(ffmpeg -i #{k} -ss 0.00 -t #{v[:split_length]} -r 60 -vcodec libx264 -crf 20 -acodec copy #{@output}/temp_#{i}.mp4)
   else
+    #copy method.. some will be upside down, but fast for testing
     %x(ffmpeg -i #{k} -c copy -ss 0.00 -t #{v[:split_length]} #{@output}/temp_#{i}.mp4)
   end
   print "."
@@ -124,8 +126,8 @@ puts "adding audio"
 
 puts "cleanup"
 # %x(rm #{@output}/output.mp4)
-# %x(rm #{@output}/temp_*)
-# %x(rm #{@output}/*.txt)
+%x(rm #{@output}/temp_*)
+%x(rm #{@output}/*.txt)
 
 puts "done"
 #cleanup
