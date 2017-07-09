@@ -1,14 +1,14 @@
 require "date"
 require "pry"
-@interval = 5.0 #no clip will be longer than this.. double if needed
-# @bpm = 96.0 #same as interval
-@offset = 0.732
+@interval = 2.553 #no clip will be longer than this.. double if needed
+# @bpm = 94.0 #same as interval
+@offset = 0.638
 # @frame_shift = 0.93#not yet
-@length = "3:51" #in minutes.seconds
-@folder = "/Users/ryanhelsing/Movies/Mexico" #E: point to all the movie files
-@song = "/Users/ryanhelsing/Music/cool_blue.mp3"
+@length = "3:28" #in minutes.seconds
+@folder = "/Users/ryanhelsing/Movies/California" #E: point to all the movie files
+@song = "/Users/ryanhelsing/Music/dream.mp3"
 @files = Dir["#{@folder}/*"]
-@output = "/Users/ryanhelsing/Movies/mm" #E: CREATE THIS OUTPUT FOLDER COULD BE MEXIXO_OUTPUT
+@output = "/Users/ryanhelsing/Movies/cali_out" #E: CREATE THIS OUTPUT FOLDER COULD BE MEXIXO_OUTPUT
 @render_final = false #WHEN TRUE, it will be slower but correct rotations
 
 #NEED TO EDIT VIDS BEFORE EXPORTING FROM PHONE>> CROP OUT SUCKY PARTS
