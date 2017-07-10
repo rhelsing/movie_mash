@@ -11,6 +11,10 @@ require "pry"
 @output = "/Users/ryanhelsing/Movies/cali_out" #E: CREATE THIS OUTPUT FOLDER COULD BE MEXIXO_OUTPUT
 @render_final = false #WHEN TRUE, it will be slower but correct rotations
 
+@overrides = "/Users/ryanhelsing/Movies/cali_specs.txt" #set to nil if no overrides
+
+@constant_length = false #all videos will be the length of the interval
+
 #NEED TO EDIT VIDS BEFORE EXPORTING FROM PHONE>> CROP OUT SUCKY PARTS
 
 #get length of song
@@ -29,40 +33,52 @@ puts "analyzing"
 @files.each do |f|
   length = %x(ffprobe -i #{f} -show_entries format=duration -v quiet -of csv="p=0")
   created = %x(ffprobe -v quiet #{f} -print_format json -show_entries format_tags=creation_time -of csv="p=0")
-  # rotation = %x(ffprobe #{f} 2>&1 | grep rotate)
-  # if rotation.strip != ""
-  #   #there is rotation
-  #   rotate = rotation.split(":")[1].strip
-  # else
-  #   rotate = false
-  # end
-  if length.gsub("\n", "").strip.to_f >= @interval
+  if !@constant_length || length.gsub("\n", "").strip.to_f >= @interval
     @hash[f] = {length: length.gsub("\n", "").strip.to_f, date: DateTime.parse("#{created.gsub(" ", "T")}+0:00")}
     print "."
   end
 end
-puts ""
 
 #1. sort by date
 @hash = @hash.sort_by { |k, v| v[:date] }
 
+@o_hash = {}
+
+if @overrides != nil
+  puts ""
+  puts "overrides"
+  #read each line into hash by name
+  File.readlines(@overrides).each do |line|
+    @o_hash[line.split(":")[0].strip] = {start_time: line.split(":")[1].strip.split("-")[0].split.to_f, end_time: line.split(":")[1].strip.split("-")[1].split.to_f}
+  end
+#   IMG_453: 2-6
+# IMG_473: 10-14
+end
+
 #go through hash and determine optimal length of each video based on interval - round down to nearest 1/(2^n) of @interval
 first = true
+puts ""
 
 puts "measuring"
 
 @hash.each do |k, v|
-  temp_strip_length = @interval
-  power = 0
-  while temp_strip_length > v[:length]
-    power += 1
-    temp_strip_length = @interval*(1/(2**power.to_f))
+
+  if @overrides != nil && @o_hash.count > 0 && @o_hash[k.gsub("#{@folder}/","")] != nil
+    v[:start_time] = @o_hash[k.gsub("#{@folder}/","")][:start_time]
+    v[:split_length] = @o_hash[k.gsub("#{@folder}/","")][:end_time]-@o_hash[k.gsub("#{@folder}/","")][:start_time]
+  else
+    temp_strip_length = @interval
+    power = 0
+    while temp_strip_length > v[:length]
+      power += 1
+      temp_strip_length = @interval*(1/(2**power.to_f))
+    end
+    v[:start_time] = 0.0
+    v[:split_length] = temp_strip_length
   end
 
   if first
-    v[:split_length] = temp_strip_length+@offset
-  else
-    v[:split_length] = temp_strip_length
+    v[:split_length] = v[:split_length]+@offset
   end
   first = false
   print "."
@@ -80,10 +96,10 @@ i = 0
   if @render_final
     # ffmpeg -i b.mp4 -ss 0.00 -t 2.5 -r 60 -vcodec libx264 -crf 20 -acodec copy test2.mp4
     #render all using same settings to concat
-    %x(ffmpeg -i #{k} -v quiet -ss 0.00 -t #{v[:split_length]} -r 60 -vcodec libx264 -crf 20 -acodec copy #{@output}/temp_#{i}.mp4)
+    %x(ffmpeg -i #{k} -v quiet -ss #{v[:start_time]} -t #{v[:split_length]} -r 60 -vcodec libx264 -crf 20 -acodec copy #{@output}/temp_#{i}.mp4)
   else
     #copy method.. some will be upside down, but fast for testing
-    %x(ffmpeg -i #{k} -v quiet -c copy -ss 0.00 -t #{v[:split_length]} #{@output}/temp_#{i}.mp4)
+    %x(ffmpeg -i #{k} -v quiet -c copy -ss #{v[:start_time]} -t #{v[:split_length]} #{@output}/temp_#{i}.mp4)
   end
   print "."
   i += 1
