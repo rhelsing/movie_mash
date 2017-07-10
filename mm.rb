@@ -5,10 +5,10 @@ require "pry"
 @offset = 0.638
 # @frame_shift = 0.93#not yet
 @length = "3:28" #in minutes.seconds
-@folder = "/Users/ryanhelsing/Movies/California" #E: point to all the movie files
-@song = "/Users/ryanhelsing/Music/dream.mp3"
+@folder = "/Users/ryanhelsing/Movies/cal2" #E: point to all the movie files
+@song = "/Users/ryanhelsing/Music/ten_tigers.mp3"
 @files = Dir["#{@folder}/*"]
-@output = "/Users/ryanhelsing/Movies/cali_out" #E: CREATE THIS OUTPUT FOLDER COULD BE MEXIXO_OUTPUT
+@output = "/Users/ryanhelsing/Movies/cal_out2" #E: CREATE THIS OUTPUT FOLDER COULD BE MEXIXO_OUTPUT
 @render_final = false #WHEN TRUE, it will be slower but correct rotations
 
 @overrides = "/Users/ryanhelsing/Movies/cali_specs.txt" #set to nil if no overrides
@@ -49,7 +49,7 @@ if @overrides != nil
   puts "overrides"
   #read each line into hash by name
   File.readlines(@overrides).each do |line|
-    @o_hash[line.split(":")[0].strip] = {start_time: line.split(":")[1].strip.split("-")[0].split.to_f, end_time: line.split(":")[1].strip.split("-")[1].split.to_f}
+    @o_hash[line.split(":")[0].strip] = {start_time: line.split(":")[1].strip.split("-")[0].strip.to_f, end_time: line.split(":")[1].strip.split("-")[1].strip.to_f}
   end
 #   IMG_453: 2-6
 # IMG_473: 10-14
