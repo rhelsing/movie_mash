@@ -1,17 +1,18 @@
 require "date"
 require "pry"
-@interval = 2.553 #no clip will be longer than this.. double if needed
+@interval = 8 #no clip will be longer than this.. double if needed
 # @bpm = 94.0 #same as interval
-@offset = 0.638
+@offset = 0
 # @frame_shift = 0.93#not yet
-@length = "3:28" #in minutes.seconds
-@folder = "/Users/ryanhelsing/Movies/cal2" #E: point to all the movie files
-@song = "/Users/ryanhelsing/Music/ten_tigers.mp3"
+@length = "10:15" #in minutes.seconds
+@folder = "/Users/ryanhelsing/Movies/Chicago2018/raw" #E: point to all the movie files
+@song = "/Users/ryanhelsing/Movies/Chicago/song.mp3"
 @files = Dir["#{@folder}/*"]
-@output = "/Users/ryanhelsing/Movies/cal_out2" #E: CREATE THIS OUTPUT FOLDER COULD BE MEXIXO_OUTPUT
+@output = "/Users/ryanhelsing/Movies/Chicago2018/out" #E: CREATE THIS OUTPUT FOLDER COULD BE MEXIXO_OUTPUT
 @render_final = false #WHEN TRUE, it will be slower but correct rotations
 
-@overrides = "/Users/ryanhelsing/Movies/cali_specs.txt" #set to nil if no overrides
+@overrides = nil #{}"/Users/ryanhelsing/Movies/Chicago/override.txt" #set to nil if no overrides
+# @overrides = nil
 
 @constant_length = false #all videos will be the length of the interval
 
@@ -32,7 +33,8 @@ puts "analyzing"
 
 @files.each do |f|
   length = %x(ffprobe -i #{f} -show_entries format=duration -v quiet -of csv="p=0")
-  created = %x(ffprobe -v quiet #{f} -print_format json -show_entries format_tags=creation_time -of csv="p=0")
+  # created = %x(ffprobe -v quiet #{f} -print_format json -show_entries format_tags=creation_time -of csv="p=0")
+  created = %x(ffprobe -v quiet #{f} -print_format json -show_entries format_tags=com.apple.quicktime.creationdate -of csv="p=0")
   if !@constant_length || length.gsub("\n", "").strip.to_f >= @interval
     @hash[f] = {length: length.gsub("\n", "").strip.to_f, date: DateTime.parse("#{created.gsub(" ", "T")}+0:00")}
     print "."
@@ -41,6 +43,7 @@ end
 
 #1. sort by date
 @hash = @hash.sort_by { |k, v| v[:date] }
+
 
 @o_hash = {}
 
@@ -120,6 +123,8 @@ end
 puts ""
 
 @hash_output = @hash_output.sort_by { |k, v| v[:index] }
+
+binding.pry
 
 puts "merging"
 File.open("#{@output}/input.txt", "w+") do |f|
