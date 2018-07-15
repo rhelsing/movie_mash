@@ -1,17 +1,17 @@
 require "date"
 require "pry"
-@interval = 8 #no clip will be longer than this.. double if needed
+@interval = 9 #no clip will be longer than this.. double if needed
 # @bpm = 94.0 #same as interval
 @offset = 0
 # @frame_shift = 0.93#not yet
-@length = "10:15" #in minutes.seconds
+@length = "7:20" #in minutes.seconds
 @folder = "/Users/ryanhelsing/Movies/Chicago2018/raw" #E: point to all the movie files
-@song = "/Users/ryanhelsing/Movies/Chicago/song.mp3"
+@song = "/Users/ryanhelsing/Movies/Chicago2018/output.mp3"
 @files = Dir["#{@folder}/*"]
 @output = "/Users/ryanhelsing/Movies/Chicago2018/out" #E: CREATE THIS OUTPUT FOLDER COULD BE MEXIXO_OUTPUT
-@render_final = false #WHEN TRUE, it will be slower but correct rotations
+@render_final = true #WHEN TRUE, it will be slower but correct rotations
 
-@overrides = nil #{}"/Users/ryanhelsing/Movies/Chicago/override.txt" #set to nil if no overrides
+@overrides = "/Users/ryanhelsing/Movies/Chicago2018/override.txt" #set to nil if no overrides
 # @overrides = nil
 
 @constant_length = false #all videos will be the length of the interval
@@ -124,7 +124,6 @@ puts ""
 
 @hash_output = @hash_output.sort_by { |k, v| v[:index] }
 
-binding.pry
 
 puts "merging"
 File.open("#{@output}/input.txt", "w+") do |f|
